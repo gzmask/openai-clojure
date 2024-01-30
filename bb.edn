@@ -7,6 +7,10 @@
   build  {:doc "Build the jar"
           :task (shell "clojure -T:build ci")
           :depends []}
+  install {:doc "install the jar"
+           :task (shell "clojure -T:build install")
+           :depends []}
+  build-install {:depends [build install]}
   deploy {:doc "Deploy to clojars"
           :task (shell "clojure -T:build deploy")
           :depends []}}}
