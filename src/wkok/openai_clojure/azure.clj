@@ -13,8 +13,8 @@
    :enter (fn [ctx]
             (let [api-key (or (-> ctx :params :wkok.openai-clojure.core/options :api-key)
                               (System/getenv "AZURE_OPENAI_API_KEY"))]
-              (assoc-in ctx [:request :headers "api-key"]
-                        api-key)))})
+              (assoc-in ctx [:request :headers "Authorization"]
+                        (str "Bearer " api-key))))})
 
 (def override-api-endpoint
   {:name ::override-api-endpoint
@@ -22,9 +22,11 @@
             (update-in ctx [:request :url]
                        (fn [url]
                          (let [endpoint (or (-> ctx :params :wkok.openai-clojure.core/options :api-endpoint)
-                                            (System/getenv "AZURE_OPENAI_API_ENDPOINT"))
-                               idx (s/index-of url "/openai")]
-                           (str endpoint (subs url idx))))))})
+                                            (System/getenv "AZURE_OPENAI_API_ENDPOINT"))]
+                           (try (let [url (java.net.URL. url)]
+                                  (str endpoint (.getPath url) (.getQuery url)))
+                             (catch java.net.MalformedURLException _
+                               (str endpoint url)))))))})
 
 (defn patch-handler
   "Patching azure's handlers to support the same operation-id names as the standard openai api"
@@ -62,5 +64,5 @@
 
 (defn patch-params [params]
   {:api-version "2023-05-15"
-   :deployment-id (:model params)
-   :martian.core/body (dissoc params :model)})
+   :martian.core/body (assoc (dissoc params :model)
+                             :deployment-id (:model params))})

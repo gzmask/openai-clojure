@@ -21,22 +21,23 @@
                (-> request :query-params :api-version))))
 
       (testing "contains api-key header"
-        (is (contains? (:headers request) "api-key")))
+        (is (contains? (:headers request) "Authorization")))
 
-      (testing "deployment-id in url"
-        (is (string/includes? (:url request) model)))
+      (testing "deployment-id in body"
+        (is (string/includes? (:body request) model)))
 
       (testing "params patched correctly"
         (is (= {:api-version spec-version
-                :deployment-id (:model params)
-                :martian.core/body (dissoc params :model)}
+                :martian.core/body
+                (assoc (dissoc params :model)
+                       :deployment-id (:model params))}
                (azure/patch-params params)))))))
 
 (deftest add-headers-init
   (let [add-headers-fn (-> azure/add-authentication-header :enter)]
     (testing "atoms get initialized correctly"
 
-      (is (= {"api-key" "my-secret-key"}
+      (is (= {"Authorization" "Bearer my-secret-key"}
              (-> (add-headers-fn {:params {:wkok.openai-clojure.core/options {:api-key "my-secret-key"}}})
                  :request
                  :headers))))))
@@ -54,4 +55,16 @@
                                  :request
                                  :url))))]
         (test-fn "/openai/some/chat/prompt")
-        (test-fn "https://www.some-other-endpoint.com/openai/some/chat/prompt")))))
+        (test-fn "https://www.some-other-endpoint.com/openai/some/chat/prompt")))
+    (testing "api endpoint gets correctly not overridden"
+
+      (let [api-endpoint "https://myendpoint.openai.azure.com"
+            path "/some/chat/prompt"
+            test-fn (fn [url]
+                      (is (= (str api-endpoint path)
+                             (-> (override-api-endpoint-fn {:request {:url url}
+                                                            :params {:wkok.openai-clojure.core/options {:api-endpoint api-endpoint}}})
+                                 :request
+                                 :url))))]
+        (test-fn "/some/chat/prompt")
+        (test-fn "https://www.some-other-endpoint.com/some/chat/prompt")))))

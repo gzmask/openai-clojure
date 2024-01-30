@@ -7,7 +7,7 @@
   },
   "servers": [
     {
-      "url": "https://{endpoint}/openai",
+      "url": "https://{endpoint}",
       "variables": {
         "endpoint": {
           "default": "your-resource-name.openai.azure.com"
@@ -26,21 +26,11 @@
     }
   ],
   "paths": {
-    "/deployments/{deployment-id}/completions": {
+    "/api/v1/completions'": {
       "post": {
         "summary": "Creates a completion for the provided prompt, parameters and chosen model.",
         "operationId": "Completions_Create",
         "parameters": [
-          {
-            "in": "path",
-            "name": "deployment-id",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "example": "davinci",
-              "description": "Deployment id of the model which was deployed."
-            }
-          },
           {
             "in": "query",
             "name": "api-version",
@@ -59,6 +49,15 @@
               "schema": {
                 "type": "object",
                 "properties": {
+                  "deployment-id": {
+                      "description": "the model",
+                      "oneOf": [{
+                        "type": "string",
+                        "default": "",
+                        "example": "This is a test.",
+                        "nullable": true
+                      }]
+                    },
                   "prompt": {
                     "description": "The prompt(s) to generate completions for, encoded as a string or array of strings.\nNote that <|endoftext|> is the document separator that the model sees during training, so if a prompt is not specified the model will generate as if from the beginning of a new document. Maximum allowed size of string list is 2048.",
                     "oneOf": [
@@ -353,16 +352,6 @@
         "operationId": "embeddings_create",
         "parameters": [
           {
-            "in": "path",
-            "name": "deployment-id",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "example": "ada-search-index-v1"
-            },
-            "description": "The deployment id of the model which was deployed."
-          },
-          {
             "in": "query",
             "name": "api-version",
             "required": true,
@@ -499,15 +488,6 @@
         "summary": "Creates a completion for the chat message",
         "operationId": "ChatCompletions_Create",
         "parameters": [
-          {
-            "in": "path",
-            "name": "deployment-id",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "description": "Deployment id of the model which was deployed."
-            }
-          },
           {
             "in": "query",
             "name": "api-version",
